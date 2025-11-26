@@ -3,15 +3,21 @@
 import { useState } from 'react';
 import FileDropzone from './components/FileDropzone';
 import ExtractedTextView from './components/ExtractedTextView';
-import { uploadService } from '../services/api.service';
+import ExtractedTablesView from './components/ExtractedTablesView';
+import { uploadService, tableExtractService } from '../services/api.service';
 import { UploadResponse } from '../types/upload.types';
+import { TableExtractResponse } from '../types/table.types';
 
 export default function UploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadResponse, setUploadResponse] = useState<UploadResponse | null>(
     null,
   );
+  const [tableExtractResponse, setTableExtractResponse] = useState<TableExtractResponse | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
+  const [isExtractingTables, setIsExtractingTables] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleFileSelect = (file: File) => {
@@ -45,9 +51,44 @@ export default function UploadPage() {
     }
   };
 
+  const handleExtractTables = async () => {
+    if (!uploadResponse?.filePath) {
+      setError('No file available for table extraction');
+      return;
+    }
+
+    setIsExtractingTables(true);
+    setError(null);
+    setTableExtractResponse(null);
+
+    try {
+      const response = await tableExtractService.extractTables(uploadResponse.filePath);
+      setTableExtractResponse(response);
+    } catch (err: any) {
+      console.error('Table extraction error:', err);
+      console.error('Error response:', err.response);
+      console.error('Error data:', err.response?.data);
+      
+      let errorMessage = 'Failed to extract tables. Please try again.';
+      
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsExtractingTables(false);
+    }
+  };
+
   const handleReset = () => {
     setSelectedFile(null);
     setUploadResponse(null);
+    setTableExtractResponse(null);
     setError(null);
   };
 
@@ -185,6 +226,72 @@ export default function UploadPage() {
             {uploadResponse.error && (
               <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800">{uploadResponse.error}</p>
+              </div>
+            )}
+
+            {/* Table Extraction Section */}
+            {uploadResponse && !tableExtractResponse && (
+              <div className="border-t border-gray-200 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Table Extraction
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Extract structured tables from the PDF document
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleExtractTables}
+                    disabled={isExtractingTables}
+                    className={`
+                      px-6 py-2 rounded-lg font-medium transition-colors
+                      ${
+                        isExtractingTables
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-green-600 text-white hover:bg-green-700'
+                      }
+                    `}
+                  >
+                    {isExtractingTables ? (
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="animate-spin h-5 w-5"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Extracting...
+                      </span>
+                    ) : (
+                      'Extract Tables'
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Extracted Tables Display */}
+            {tableExtractResponse && (
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Extracted Tables
+                </h3>
+                <ExtractedTablesView tables={tableExtractResponse.tables} />
               </div>
             )}
           </div>

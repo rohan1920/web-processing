@@ -7,6 +7,13 @@ export interface UploadResponse {
   uploadedAt: string;
   extractedText?: string;
   error?: string;
+  tables?: Array<{
+    rows: number;
+    columns: number;
+    data: string[][];
+    page?: number;
+    table_index?: number;
+  }>;
 }
 
 export interface FilePreview {
