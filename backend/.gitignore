@@ -1,0 +1,15 @@
+# compiled output
+/dist
+/node_modules
+
+# Logs
+logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Uploads
+uploads/
+

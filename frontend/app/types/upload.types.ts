@@ -1,4 +1,4 @@
-export class UploadResponseDto {
+export interface UploadResponse {
   id: string;
   filename: string;
   originalName: string;
@@ -8,3 +8,11 @@ export class UploadResponseDto {
   extractedText?: string;
   error?: string;
 }
+
+export interface FilePreview {
+  name: string;
+  size: number;
+  type: string;
+  file: File;
+}
+
