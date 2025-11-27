@@ -69,7 +69,7 @@ export default function FilterPanel({
 
   const updateFilter = (index: number, updates: Partial<Filter>) => {
     const updated = filters.map((f, i) => 
-      i === index ? { ...f, ...updates } : f
+      i === index ? { ...f, ...updates } as Filter : f
     );
     onFiltersChange(updated);
   };

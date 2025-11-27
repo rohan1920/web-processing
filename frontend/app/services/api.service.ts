@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { UploadResponse } from '../types/upload.types';
 import { TableExtractResponse } from '../types/table.types';
+import { DataResponse } from '../types/data.types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -33,6 +34,16 @@ export const tableExtractService = {
     const response = await jsonClient.post<TableExtractResponse>('/table-extract', {
       file_path: filePath,
     });
+    return response.data;
+  },
+};
+
+export const dataUploadService = {
+  uploadData: async (file: File): Promise<DataResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post<DataResponse>('/data-upload', formData);
     return response.data;
   },
 };
